@@ -75,6 +75,20 @@ public class Stage : MonoBehaviour
         {
             MoveTetromino(moveDir, isRotate);
         }
+        
+        
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            while(MoveTetromino(Vector3.down, false))   // false 할 때까지 반복해 주면 바닥으로 바로 이동하게 된다.
+            {
+
+            }
+        }
+
+        if(Input.GetKeyDown(KeyCode.Escape))    // esc 누르면 게임을 처움부터 다시하는 기능
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+        }
 
         if(Time.time > nextFallTime)
         { // 현재시간이 다음 떨어질 시간보다 크면 강제로 이동시키고 , 사용자 입력을 무시
