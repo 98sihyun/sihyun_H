@@ -73,7 +73,8 @@ public class Stage : MonoBehaviour
         //방향벡터가 0이고 회전이 없다면 입력값이 없다는 의미이므로 그렇지 않은 경우에만 테트로미노를 이동하는 메서드를 호출
         if (moveDir != Vector3.zero || isRotate)
         {
-            MoveTetromino(moveDir, isRotate);
+            bool result = MoveTetromino(moveDir, isRotate);
+            Debug.Log(result);
         }
         
         
@@ -96,12 +97,13 @@ public class Stage : MonoBehaviour
             nextFallTime = Time.time +fallCyecle;
             moveDir = Vector3.down;
             isRotate = false;
-        }
-
-        if(moveDir != Vector3.zero || isRotate)
-        {
             MoveTetromino(moveDir, isRotate);
         }
+
+        /*if(moveDir != Vector3.zero || isRotate)
+        {
+            MoveTetromino(moveDir, isRotate);
+        }*/
     }
     /// <summary>
     /// 
@@ -117,7 +119,9 @@ public class Stage : MonoBehaviour
         tetrominoNode.transform.position += moveDir;
         if (isRotate)
         {
-            tetrominoNode.transform.rotation *= Quaternion.Euler(0, 0, 90); // z 기준으로 회전
+            //tetrominoNode.transform.rotation *= Quaternion.Euler(0, 0, 90); // z 기준으로 회전
+            tetrominoNode.transform.rotation = Quaternion.Euler(0, 0, 90) * tetrominoNode.transform.rotation;
+            Debug.Log(tetrominoNode.transform.rotation.eulerAngles.z);
         }
 
         if(!CanMoveTo(tetrominoNode))   // 반환값이 거짓(false)이면 이동이 불가능, 위에서 저장해둔 기존 위치로 되돌아간다.
@@ -153,7 +157,56 @@ public class Stage : MonoBehaviour
 
     private void CheckBoardColumn()
     {
-        throw new NotImplementedException();
+        bool isCleared = false; // 지워진 행이 있는지 점검
+
+        // 완성된 행 == 행의 자식 갯수가 가로 크기
+        foreach (Transform column in boardNode)
+        {
+            if(column.childCount == boardWidth) // 행의 자식이 boardWidth와 같은지 확인하고 같다면 모두 삭제
+            {
+                foreach (Transform tile in column)
+                {
+                    Destroy(tile.gameObject);
+                }
+                column.DetachChildren();
+                isCleared = true;
+            }
+        }
+        // 비어 있는 행이 존재하면 아래로 당기기
+        if(isCleared)
+        {
+            for (int i = 1; i< boardNode.childCount; ++i)
+            {
+                var column = boardNode.Find(i.ToString());
+
+                // 이미 비어 있는 행은 무시
+                if (column.childCount == 0)
+                    continue;
+
+                int emptyCol = 0;
+                int j = i - 1;
+                while (j >=0)   // 아래쪽에 빈 행들이 있는지 확인 해주는 것
+                {
+                    if( boardNode.Find(j.ToString()).childCount == 0)
+                    {
+                        emptyCol++;
+                    }
+                    j--;
+                }
+                if (emptyCol > 0)   // 아래쪽에 빈 행들이 존재한다면 아래로 내려주는 작업
+                {
+                    var targetColumn = boardNode.Find((i-emptyCol).ToString());
+
+                    while(column.childCount > 0)
+                    {
+                        Transform tile = column.GetChild(0);
+                        tile.parent = targetColumn;
+                        tile.transform.position += new Vector3(0, -emptyCol, 0);
+                    }
+                    column.DetachChildren();
+                }
+            }
+        }
     }
 
     /// <summary>
