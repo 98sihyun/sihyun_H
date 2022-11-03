@@ -335,6 +335,7 @@ MonoBehaviour:
   backgroundNode: {fileID: 1780002584}
   boardNode: {fileID: 1947008682}
   tetrominoNode: {fileID: 1866623627}
+  gameoverpanel: {fileID: 12733673}
   boardWidth: 10
   boardHeight: 20
   fallCyecle: 1

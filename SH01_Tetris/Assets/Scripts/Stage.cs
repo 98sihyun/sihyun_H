@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEngine.UI;
 using UnityEngine;
 
 public class Stage : MonoBehaviour
@@ -11,6 +12,11 @@ public class Stage : MonoBehaviour
     public Transform backgroundNode;
     public Transform boardNode;
     public Transform tetrominoNode;
+
+    public GameObject gameoverpanel;
+    public Text score;
+    public Text level;
+    public Text line;
 
     [Header("Game Settings")]
     [Range(4, 40)]                      // Range(min,max) 최소/최댓 값
@@ -26,8 +32,21 @@ public class Stage : MonoBehaviour
     /// </summary>
     private float nextFallTime;
 
+    //UI 관련변수
+    private int scoreVal = 0;
+    private int levelVal = 1;
+    private int lineVal;
+
     private void Start()
     {
+        // 게임 시작시 text 설정
+        lineVal = levelVal * 2; // 임시 레벨 디자인
+        score.text = "" + scoreVal;
+        level.text = "" + levelVal;
+        line.text = "" + lineVal;
+
+        gameoverpanel.SetActive(false);
+
         halfWidth = Mathf.RoundToInt(boardWidth * 0.5f);    //Round 반올림 ToInt int형으로 반환한다.
         halfHeight = Mathf.RoundToInt(boardHeight * 0.5f);
 
@@ -47,57 +66,67 @@ public class Stage : MonoBehaviour
 
     private void Update()
     {
-        Vector3 moveDir = Vector3.zero;
-        bool isRotate = false;              // 회전여부
-
-        if(Input.GetKeyDown(KeyCode.LeftArrow))
+        if(gameoverpanel.activeSelf)
         {
+            if(Input.GetKeyDown(KeyCode.Escape))
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+            }
+        }
+        else 
+        { 
+         Vector3 moveDir = Vector3.zero;
+         bool isRotate = false;              // 회전여부
+
+         if(Input.GetKeyDown(KeyCode.LeftArrow))
+         {
             moveDir.x = -1;
-        }
+         }
 
-        else if(Input.GetKeyDown(KeyCode.RightArrow))
-        {
+         else if(Input.GetKeyDown(KeyCode.RightArrow))
+         {
             moveDir.x = 1;
-        }
+         }
 
-        if(Input.GetKeyDown(KeyCode.UpArrow))
-        {
+         if(Input.GetKeyDown(KeyCode.UpArrow))
+         {
             isRotate = true;
-        }
+         }
 
-        else if( Input.GetKeyDown(KeyCode.DownArrow))
-        {
+         else if( Input.GetKeyDown(KeyCode.DownArrow))
+         {
             moveDir.y = -1;
-        }
+         }
 
         //방향벡터가 0이고 회전이 없다면 입력값이 없다는 의미이므로 그렇지 않은 경우에만 테트로미노를 이동하는 메서드를 호출
-        if (moveDir != Vector3.zero || isRotate)
-        {
+         if (moveDir != Vector3.zero || isRotate)
+         {
             bool result = MoveTetromino(moveDir, isRotate);
             Debug.Log(result);
-        }
+         }
         
-        
-        if(Input.GetKeyDown(KeyCode.Space))
-        {
+
+         if (Input.GetKeyDown(KeyCode.Space))
+         {
             while(MoveTetromino(Vector3.down, false))   // false 할 때까지 반복해 주면 바닥으로 바로 이동하게 된다.
             {
 
             }
-        }
+         }
 
-        if(Input.GetKeyDown(KeyCode.Escape))    // esc 누르면 게임을 처움부터 다시하는 기능
-        {
-            UnityEngine.SceneManagement.SceneManager.LoadScene(0);
-        }
+         if(Input.GetKeyDown(KeyCode.Escape))    // esc 누르면 게임을 처움부터 다시하는 기능
+         {
+             UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+         }
 
-        if(Time.time > nextFallTime)
-        { // 현재시간이 다음 떨어질 시간보다 크면 강제로 이동시키고 , 사용자 입력을 무시
+         if(Time.time > nextFallTime)
+         { // 현재시간이 다음 떨어질 시간보다 크면 강제로 이동시키고 , 사용자 입력을 무시
 
             nextFallTime = Time.time +fallCyecle;
             moveDir = Vector3.down;
             isRotate = false;
             MoveTetromino(moveDir, isRotate);
+         }
         }
 
         /*if(moveDir != Vector3.zero || isRotate)
@@ -134,6 +163,11 @@ public class Stage : MonoBehaviour
                 AddToBoard(tetrominoNode);
                 CheckBoardColumn();
                 CreateTetromino();
+
+                if(!CanMoveTo(tetrominoNode))
+                {
+                    gameoverpanel.SetActive(true);
+                }
             }
 
             return false;
@@ -159,6 +193,8 @@ public class Stage : MonoBehaviour
     {
         bool isCleared = false; // 지워진 행이 있는지 점검
 
+        int linecount =  0; // 한번에 사라진 행 개수 확인용
+
         // 완성된 행 == 행의 자식 갯수가 가로 크기
         foreach (Transform column in boardNode)
         {
@@ -170,8 +206,31 @@ public class Stage : MonoBehaviour
                 }
                 column.DetachChildren();
                 isCleared = true;
+                linecount++; // 완성된 ㅐㅇ 하나당 linecount 장가
             }
         }
+        // 완성된 행이 있을경우 점수증가
+        if(linecount !=0)
+        {
+            scoreVal += linecount * linecount * 100;
+            score.text = "" + scoreVal;
+        }
+
+        // 완성된 행이 있을경우 남은라인 감소
+        if(linecount!=0)
+        {
+            lineVal -= linecount;
+            // 레벨업까지 필요 라인 도달경우(최대 레벨 10으로 한정)
+            if(lineVal <= 0 && levelVal<=10)
+            {
+                levelVal += 1; //레벨증가
+                lineVal = levelVal * 2 + lineVal; // 남은 라인 갱신
+                fallCyecle = 0.1f * (10 - levelVal); // 속도 증가
+            }
+            level.text = "" + levelVal;
+            line.text = "" + lineVal;
+        }
+            
         // 비어 있는 행이 존재하면 아래로 당기기
         if(isCleared)
         {
