@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine.UI;
 using UnityEngine;
+using System.Reflection;
 
 public class Stage : MonoBehaviour
 {
@@ -12,6 +13,7 @@ public class Stage : MonoBehaviour
     public Transform backgroundNode;
     public Transform boardNode;
     public Transform tetrominoNode;
+    public Transform previewNode;
 
     public GameObject gameoverpanel;
     public Text score;
@@ -36,6 +38,8 @@ public class Stage : MonoBehaviour
     private int scoreVal = 0;
     private int levelVal = 1;
     private int lineVal;
+
+    private int indexVal=-1;
 
     private void Start()
     {
@@ -354,7 +358,14 @@ public class Stage : MonoBehaviour
     /// </summary>
     private void CreateTetromino()
     {
+        
         int index = UnityEngine.Random.Range(0, 7);
+
+        if (indexVal == -1)
+        {
+            index = UnityEngine.Random.Range(0, 7);
+        }
+        else index = indexVal;
         Color32 color = Color.white;
 
         tetrominoNode.rotation = Quaternion.identity;           // 회전 없음.
@@ -424,6 +435,89 @@ public class Stage : MonoBehaviour
                 CreateTile(tetrominoNode, new Vector2(1f, 0.0f), color);
                 break;
         }
+        CreatePreview();
     }
 
+    void CreatePreview()
+    {
+        foreach (Transform tile in previewNode)
+        {
+            Destroy(tile.gameObject);
+        }
+        previewNode.DetachChildren();
+
+        indexVal = UnityEngine.Random.Range(0, 7);
+
+        Color32 color = Color.white;
+
+        // 미리보기 테트로미노 생성 위치(우측 상단)
+        previewNode.position = new Vector2(halfWidth + 5, halfHeight - 3);
+
+        switch (indexVal)
+        {
+            // I : 하늘색
+            case 0:
+                color = new Color32(115, 251, 253, 255);
+                CreateTile(previewNode, new Vector2(-2f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(-1f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(0f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(1f, 0.0f), color);
+                break;
+
+            // J : 파란색
+            case 1:
+                color = new Color32(0, 33, 245, 255);
+                CreateTile(previewNode, new Vector2(-1f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(0f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(1f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(-1f, 1.0f), color);
+                break;
+
+            // L : 귤색
+            case 2:
+                color = new Color32(243, 168, 59, 255);
+                CreateTile(previewNode, new Vector2(-1f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(0f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(1f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(1f, 1.0f), color);
+                break;
+
+            // O : 노란색
+            case 3:
+                color = new Color32(255, 253, 84, 255);
+                CreateTile(previewNode, new Vector2(0f, 0f), color);
+                CreateTile(previewNode, new Vector2(1f, 0f), color);
+                CreateTile(previewNode, new Vector2(0f, 1f), color);
+                CreateTile(previewNode, new Vector2(1f, 1f), color);
+                break;
+
+            // S : 녹색
+            case 4:
+                color = new Color32(117, 250, 76, 255);
+                CreateTile(previewNode, new Vector2(-1f, -1f), color);
+                CreateTile(previewNode, new Vector2(0f, -1f), color);
+                CreateTile(previewNode, new Vector2(0f, 0f), color);
+                CreateTile(previewNode, new Vector2(1f, 0f), color);
+                break;
+
+            // T: 자주색
+            case 5:
+                color = new Color32(115, 47, 246, 255);
+                CreateTile(previewNode, new Vector2(-1f, 0f), color);
+                CreateTile(previewNode, new Vector2(0f, 0f), color);
+                CreateTile(previewNode, new Vector2(1f, 0f), color);
+                CreateTile(previewNode, new Vector2(0f, 1f), color);
+                break;
+            // Z : 빨간색
+            case 6:
+                color = new Color32(235, 51, 35, 255);
+                CreateTile(previewNode, new Vector2(-2f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(-1f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(0f, 0.0f), color);
+                CreateTile(previewNode, new Vector2(1f, 0.0f), color);
+                break;
+        } 
+
+
+    }
 }
